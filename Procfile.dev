@@ -1,0 +1,4 @@
+web: bundle exec rails s -b '0.0.0.0' -P /dev/null
+guard: bundle exec guard -i --no-bundler-warning --force-polling
+
+# foreman start -f Procfile.dev -p 3000
