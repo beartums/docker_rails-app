@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_15_023242) do
+ActiveRecord::Schema.define(version: 2019_10_16_121615) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -27,6 +27,8 @@ ActiveRecord::Schema.define(version: 2019_10_15_023242) do
     t.string "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["date", "amount", "transaction_type"], name: "index_transactions_on_date_and_amount_and_transaction_type"
+    t.index ["date"], name: "index_transactions_on_date"
   end
 
 end

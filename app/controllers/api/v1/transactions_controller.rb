@@ -17,6 +17,12 @@ class Api::V1::TransactionsController < ApplicationController
       transaction.update_attributes(transaction_params)
       render json: transaction
     end
+
+    def import
+      result = Transaction.import(params[:file].path)
+      #puts result.to_s
+      render :json => {count: result.count, status: :created}
+    end
   
     private
   
