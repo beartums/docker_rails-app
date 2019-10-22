@@ -1,8 +1,11 @@
 Rails.application.routes.draw do
+
   root 'home#index'
 
   namespace :api do
     namespace :v1 do
+      resources :category_groups, only: [:index, :create, :destroy, :update]
+      resources :category_group_memberships, only: [:index, :create, :destroy, :update]
       resources :transactions, only: [:index, :create, :destroy, :update]
       resources :transactions do 
         collection do

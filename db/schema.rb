@@ -10,10 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_16_121615) do
+ActiveRecord::Schema.define(version: 2019_10_18_033702) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "category_group_memberships", force: :cascade do |t|
+    t.string "category"
+    t.integer "category_group_id"
+    t.integer "profile_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_category_group_memberships_on_category"
+    t.index ["category_group_id"], name: "index_category_group_memberships_on_category_group_id"
+  end
+
+  create_table "category_groups", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "transactions", force: :cascade do |t|
     t.date "date"

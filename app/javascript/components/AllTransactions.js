@@ -9,12 +9,15 @@ class AllTransactions extends React.Component {
 
   render() {
     if (!this.props.transactions) return '';
-    return this.props.transactions.map( transaction => {
+
+    let transactionsJsx = this.props.transactions.map( transaction => {
 
       return (
         <Transaction key={transaction.id} transaction={transaction} />
       )
     })
+    transactionsJsx = <table className="table table-condensed"><tbody>{transactionsJsx}</tbody></table>
+    return transactionsJsx;
   }
 }
 

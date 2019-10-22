@@ -5,7 +5,7 @@ Rails.application.configure do
   config.web_console.whitelisted_ips = '192.168.0.0/16'
   
   # Configure the live-reload middleware
-  config.middleware.insert_after(ActionDispatch::Static, Rack::LiveReload)
+  #config.middleware.insert_after(ActionDispatch::Static, Rack::LiveReload)
 
   # In the development environment your application's code is reloaded on
   # every request. This slows down response time but is perfect for development

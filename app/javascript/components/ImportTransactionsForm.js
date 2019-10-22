@@ -13,7 +13,7 @@ class ImportTransactionsForm extends React.Component {
       <div className="file-field">
 
         <label className="btn btn-default btn-file">
-            Browse 
+            Import Transactions CSV 
             <input type="file" 
                     style={this.inputStyle} 
                     onChange={this.props.handleClick} />
