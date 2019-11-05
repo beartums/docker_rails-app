@@ -36,6 +36,18 @@
   padding-left: 15px;
 }
 
+.hover-button {
+  color: lightgray!important;
+  font-size: smaller;
+  padding: 2px 4px 6px 6px;
+  position: relative;
+  tops: -2px;
+  border-radius: 25%;
+  &:hover {
+    color: black!important;
+    background-color: lightgray;
+  }
+}
 .table-xs {
   font-size: .8rem;
   line-height: 1rem;

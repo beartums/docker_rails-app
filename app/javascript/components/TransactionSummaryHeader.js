@@ -28,13 +28,13 @@ class TransactionSummaryHeader extends React.Component {
     return (
       <thead>
         <tr className='xs'>
-          <th className="text-right xs" rowSpan="2"></th>
-          { years.map(year => {
-            return <th colSpan={year.months.length} className="text-center xs">{year.year}</th>
+          <th className="text-right xs" rowSpan="2" colSpan="2"></th>
+          { years.map((year,idx) => {
+            return <th key={idx} colSpan={year.months.length} className="text-center xs">{year.year}</th>
           })}
         </tr>
         <tr className="xs">
-          {this.props.periods.map( {period, idx} => {
+          {this.props.periods.map( (period, idx) => {
             return (
               <th key={idx} className="text-center xs" title={this.getPeriodTitle(period)}>
                 {MONTHS[period.startDate.getMonth()]}

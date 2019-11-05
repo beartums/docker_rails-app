@@ -4,6 +4,7 @@ import Modal from './Modal';
 import TransactionSummaryTable from './TransactionSummaryTable';
 import { getCategories } from '../services/transactionService'
 import $ from 'jquery';
+import PropTypes from 'prop-types';
 
 var GROUP_NAME_DIALOG = {
   METHODS: {
@@ -321,6 +322,7 @@ class CategoryGroups extends React.Component {
           </div>
           <div className="col-6">
               <TransactionSummaryTable groups={groups} 
+                              transactions={this.props.transactions}
                               minDate={this.state.minTransactionDate}
                               maxDate={this.state.maxTransactionDate} />
           </div>
@@ -331,3 +333,15 @@ class CategoryGroups extends React.Component {
 }
 
 export default CategoryGroups;
+
+CategoryGroups.propTypes = {
+  minDate: PropTypes.instanceOf(Date),
+  maxDate: PropTypes.instanceOf(Date),
+  transactions: PropTypes.arrayOf(PropTypes.shape({
+    date: PropTypes.string,
+    amount: PropTypes.float,
+    category: PropTypes.string,
+    account: PropTypes.string,
+    original_description: PropTypes.string
+  }))
+}

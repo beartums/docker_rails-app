@@ -1,6 +1,8 @@
 import React from 'react';
 import Category from './Category';
+import { FaCaretRight, FaCaretDown, FaTimes, FaEdit } from 'react-icons/fa'
 
+const invisible = { visibility: 'hidden'}
 class Group extends React.Component {
   constructor(props) {
     super(props);
@@ -19,22 +21,22 @@ class Group extends React.Component {
   render() {
     return (
       <div className="indent">
-        { this.props.group.name } ({ this.props.group.categories.length }) 
-        &nbsp;
-        <button className="btn btn-xs btn-hover" 
+        <span style={+this.props.group.id < 0 ? {visibility:'hidden'} : {visibility: 'visible'}}>
+          <a className="hover-button" onClick={this.deleteGroup}>
+            <FaTimes />
+          </a>
+          &nbsp;
+          <a className="hover-button" onClick={this.renameGroup}>
+            <FaEdit />
+          </a>
+          &nbsp;
+        </span>          
+        <a className="hover-button" 
           onClick={() => this.setState({showCategories: !this.state.showCategories})}>
-          {this.state.showCategories ? "hide" : "show"}
-        </button>
-        { +this.props.group.id < 0 ? '' : (
-          <span>
-            <button className="btn btn-xs btn-hover" onClick={this.deleteGroup}>
-              Delete
-            </button>
-            <button className="btn btn-xs btn-hover" onClick={this.renameGroup}>
-              Rename
-            </button>
-          </span>          
-        )}
+          {this.state.showCategories ? <FaCaretDown /> : <FaCaretRight />}
+        </a>
+      { this.props.group.name } ({ this.props.group.categories.length }) 
+        &nbsp;
         { this.state.showCategories ? (
             <div className="indent">
               {

@@ -3,6 +3,7 @@ import TransactionSummaryRow from './TransactionSummaryRow';
 import TransactionSummaryHeader from './TransactionSummaryHeader';
 import { FaChevronLeft, FaChevronRight, FaBackward, FaForward, FaStepBackward, FaStepForward } from 'react-icons/fa'
 import moment from 'moment';
+import { Period } from './classes';
 
 
 var GLOBAL_SETTINGS = {
@@ -12,126 +13,149 @@ var GLOBAL_SETTINGS = {
   PERIOD_COUNT: 3,
 }
 
-class Period {
-  constructor(rangeStartDate, periodOffset, rangeType, rangeCount) {
-    let totalRangeCount = rangeCount * periodOffset;
-    let startDate = moment(rangeStartDate).add(totalRangeCount, rangeType);
-    this.startDate = startDate.toDate();
-    let endDate = startDate.add(rangeCount, rangeType).subtract(1,'d');
-    this.endDate = endDate.toDate();
-  }
-}
-
 class TransactionSummaryTable extends React.Component {
   constructor(props) {
     super(props);
+    let currentPeriod = this.createPeriod(GLOBAL_SETTINGS.START_DATE);
+    let firstPeriod = this.getExtremePeriod('min', currentPeriod);
+    let lastPeriod = this.getExtremePeriod('max', currentPeriod);
+
+    let lastPeriodShown = this.createPeriod(currentPeriod.startDate,
+      GLOBAL_SETTINGS.PERIOD_COUNT-1,
+      currentPeriod.rangeType,
+      currentPeriod.rangeCount);
+
     this.state = {
-      SETTINGS: GLOBAL_SETTINGS
+      SETTINGS: GLOBAL_SETTINGS,
+      periodsBeforeFirst: Period.getPeriodDiff(firstPeriod, currentPeriod),
+      periodsAfterLast: Period.getPeriodDiff(lastPeriodShown, lastPeriod),
+      firstPeriod: firstPeriod,
+      lastPeriod: lastPeriod,
+      currentPeriod: currentPeriod
     }
-  }
-  changeStartDate = (delta) => {
-    let SETTINGS = this.state.SETTINGS
-    let periodOffset = 0;
-    let period;
-    if (delta === Number.MAX_SAFE_INTEGER) {
-      period = this.getExtremePeriod('max')
-      period = new Period (
-        period.startDate,-1 * SETTINGS.PERIOD_COUNT + 1,
-        SETTINGS.PERIOD_RANGE_TYPE, SETTINGS.PERIOD_RANGE_COUNT
-      );
-    } else if (delta === Number.MIN_SAFE_INTEGER) {
-      period = this.getExtremePeriod('min')
-    } else {
-      period = new Period(
-        SETTINGS.START_DATE, delta, 
-        SETTINGS.PERIOD_RANGE_TYPE, SETTINGS.PERIOD_RANGE_COUNT
-      );
-    }
-    SETTINGS.START_DATE = period.startDate;
-    this.setState({SETTINGS: SETTINGS});
+
   }
 
-  getPeriodTypeDiff = (periodStartDate, transactionDate) => {
-
-    let months = transactionDate.getMonth() - periodStartDate.getMonth();
-    let years = transactionDate.getFullYear() - periodStartDate.getFullYear();
-    let monthDiff = months + years * 12;
-    monthDiff += transactionDate.getDate() < periodStartDate.getDate() ? -1 : 0;
-
-    return monthDiff || 0;
-  }
-  getPeriodDiff = (periodA, periodB) => {
-    let divisor = this.state.SETTINGS.PERIOD_RANGE_COUNT;
-    return Math.ceil(this.getPeriodTypeDiff(periodA.startDate, periodB.startDate)/divisor);
-  }
-
-  getExtremePeriod = (minmax) => {
-    let SETTINGS = this.state.SETTINGS;
-    minmax = (minmax == 'min' || minmax == 'max') ? minmax : 'min'
-    let months = this.getPeriodTypeDiff(SETTINGS.START_DATE, this.props[`${minmax}Date`]);
-    let periodOffset = Math.ceil(months/SETTINGS.PERIOD_RANGE_COUNT);
-    let period = new Period(
-      SETTINGS.START_DATE, periodOffset, 
-      SETTINGS.PERIOD_RANGE_TYPE, SETTINGS.PERIOD_RANGE_COUNT
-    );
+  createPeriod = (startDate, offset, rangeType, rangeCount) => {
+    let period = new Period(startDate, offset, rangeType, rangeCount);
     return period;
   }
 
-  isEarliestPeriod = (date) => {
-    if (!date) return;
-    let period = this.getExtremePeriod('min');
-    return date >= period.startDate && date <= period.endDate;
+  setPeriodRelativeCounts = (period) => {
+    let lastShownPeriod = this.getLastShownPeriod(period);
+    this.setState({
+      periodsBeforeFirst: Period.getPeriodDiff(this.state.firstPeriod, period),
+      periodsAfterLast: Period.getPeriodDiff(lastShownPeriod, this.state.lastPeriod),
+      currentPeriod: period
+    });
   }
-  isMostRecentPeriod = (date) => {
-    if (!date) return;
-    let period = this.getExtremePeriod('max');
-    return date >= period.startDate && date <= period.endDate;
+
+  getLastShownPeriod = (firstShownPeriod) => {
+    let period = new Period(firstShownPeriod.startDate,
+                          this.state.SETTINGS.PERIOD_COUNT-1,
+                          firstShownPeriod.rangeType,
+                          firstShownPeriod.rangeCount);
+    return period;
+  }
+
+  changeStartDate = (delta) => {
+    let periodOffset = 0;
+    let period;
+    if (delta === Number.MAX_SAFE_INTEGER) {
+      period = this.state.lastPeriod;
+      period = period.getOffestPeriod(-1 * this.state.SETTINGS.PERIOD_COUNT + 1);
+    } else if (delta === Number.MIN_SAFE_INTEGER) {
+      period = this.state.firstPeriod;
+    } else {
+      period = this.state.currentPeriod;
+      period = period.getOffsetPeriod(delta);
+    }
+    this.setPeriodRelativeCounts(period);
+  }
+
+  getExtremePeriod = (minmax, currentPeriod) => {
+    if (!this.props.minDate) return;
+    currentPeriod = currentPeriod || this.state.currentPeriod;
+    let minmaxDate = this.props[`${minmax}Date`];
+    let period = currentPeriod.getRelativePeriod(minmaxDate);
+    return period;
+  }
+
+  periodsAfterLast = () => {
+    return this.state.periodsAfterLast;
+  }
+  periodsBeforeFirst = () => {
+    return this.state.periodsBeforeFirst;
+  }
+
+  toggleSummarized = (groupName, totals) => {
+    let toggles = this.state.summarizedGroupToggles;
+    toggles[groupName] = !toggles[groupName]
+    this.setState({
+      summarizeGroupToggles: toggles
+    });
+  }
+
+  summarizeTotals = (groups, summarizeGroupToggles) => {
+    let totals = groups.forEach( group => {
+      if (summarizedGroupToggles[group.name]) {
+        group.totals.forEach( (total, idx) => {
+          totals[idx] += total;
+        })
+      }
+    });
+    return totals;
   }
 
   render() {
-    let SETTINGS = this.state.SETTINGS;
-    let periods = new Array(SETTINGS.PERIOD_COUNT).fill({startDate:null,endDate:null});
-    periods.forEach((period,idx) => {
-      periods[idx] = new Period(SETTINGS.START_DATE, idx, SETTINGS.PERIOD_RANGE_TYPE, SETTINGS.PERIOD_RANGE_COUNT);
-    })
+    let numPeriodsToShow = this.state.SETTINGS.PERIOD_COUNT
+    let periods = [];
+    let totals = [];
+    let startPeriod = this.state.currentPeriod;
+    for (let i = 0; i < numPeriodsToShow; i++) {
+      let period = new Period(startPeriod.startDate, i, startPeriod.rangeType, startPeriod.rangeCount);
+      period.setPeriodTransactions(this.props.transactions);
+      periods.push(period);
+    }
+
     return(
       <div class-name="row">
         <div className="col-12">
 
           <div className="row">
             <div className="col-6">
-                <button className="btn btn-sm" disabled={this.isEarliestPeriod(periods[0].startDate)}
+                <button className="btn btn-sm" disabled={this.periodsBeforeFirst() === 0}
                       title='Step backward one period'
                       onClick={() => this.changeStartDate(-1)}>
                       <FaChevronLeft />
                 </button>
                 &nbsp;
-                <button className="btn btn-sm" disabled={this.isEarliestPeriod(periods[0].startDate)}
+                <button className="btn btn-sm" disabled={this.periodsBeforeFirst() < numPeriodsToShow}
                       title='Jump backward one page'
-                      onClick={() => this.changeStartDate(-1*SETTINGS.PERIOD_COUNT)}>
+                      onClick={() => this.changeStartDate(-1*numPeriodsToShow)}>
                       <FaBackward />
                 </button>
                 &nbsp; 
-                <button className="btn btn-sm" disabled={this.isEarliestPeriod(periods[0].startDate)}
+                <button className="btn btn-sm" disabled={this.periodsBeforeFirst() === 0}
                       title='Go to the oldest period'
                       onClick={() => this.changeStartDate(Number.MIN_SAFE_INTEGER)}>
                       <FaStepBackward />
                 </button>
             </div>
             <div className="col-6 text-right">
-                <button className="btn btn-sm" disabled={this.isMostRecentPeriod(periods[periods.length-1].startDate)} 
+                <button className="btn btn-sm" disabled={this.periodsAfterLast() === 0} 
                       title='Go to the newest period'
                       onClick={() => this.changeStartDate(Number.MAX_SAFE_INTEGER)}>
                   <FaStepForward />
                 </button>
                 &nbsp; 
-                <button className="btn btn-sm"  disabled={this.getPeriodDiff(periods[periods.length-1],this.getExtremePeriod('max'))<3}
+                <button className="btn btn-sm"  disabled={this.periodsAfterLast()<3}
                       title='Jump forward one page'
-                      onClick={() => this.changeStartDate(SETTINGS.PERIOD_COUNT)}>
+                      onClick={() => this.changeStartDate(numPeriodsToShow)}>
                   <FaForward />
                 </button>
                 &nbsp; 
-                <button className="btn btn-sm"  disabled={this.isMostRecentPeriod(periods[periods.length-1].startDate)} 
+                <button className="btn btn-sm"  disabled={this.periodsAfterLast() === 0} 
                       title='Step forward one period'
                       onClick={() => this.changeStartDate(1)}>
                   <FaChevronRight />
@@ -141,11 +165,11 @@ class TransactionSummaryTable extends React.Component {
 
           <div className="row">
             <div className="col-12">
-              <table className="table table-condensed table-xs">
+              <table width="100%" className="table table-condensed table-xs">
                 <TransactionSummaryHeader periods={periods} />
                 <tbody>
                   { this.props.groups.map(group => {
-                    return <TransactionSummaryRow key={group.id} group={group} periods={periods} />
+                    return <TransactionSummaryRow key={group.id} group={group} periods={periods} toggleSummarized={this.toggleSummarized} />
                   })}
                 </tbody>
               </table>

@@ -1,15 +1,17 @@
-var URL = {
+const URL = {
   GROUPS: '/api/v1/category_groups',
+  TRANSACTIONS: '/api/v1/transactions',
   MEMBERSHIPS: '/api/v1/category_group_memberships'
 }
-var ENTITIES= {
+const ENTITIES= {
   GROUP: 'category_group',
-  MEMBERSHIP: 'category_group_membership'
+  MEMBERSHIP: 'category_group_membership',
+  TRANSACTION: 'transaction'
 }
 
 class DataService {
-
-  updateGroup(oldGroup, newGroup) {
+  
+  static updateGroup(oldGroup, newGroup) {
     let groupId = oldGroup.id || oldGroup;
     let newName = newGroup.name || newGroup;
     let url = `${URL.GROUPS}/${groupId}`;
@@ -17,62 +19,70 @@ class DataService {
     body[ENTITIES.GROUP] = {
       name: newName
     }
-    return this.goFetch(url, "PATCH", body);
+    return DataService.goFetch(url, "PATCH", body);
   }
 
-  createGroup(newGroup) {
+  static createGroup(newGroup) {
     let newName = newGroup.name || newGroup;
     let url = `${URL.GROUPS}`;
     let body = {};
     body[ENTITIES.GROUP] = {
       name: newName
     }
-    return this.goFetch(url, "POST", body);
+    return DataService.goFetch(url, "POST", body);
   }
 
-  getGroups() {
+  static getGroups() {
     let url = `${URL.GROUPS}`;
-    return this.goFetch(url, "GET", {});
+    return DataService.goFetch(url, "GET", {});
   }
 
-  deleteGroup(group) {
+  static deleteGroup(group) {
     let groupId = oldGroup.id || oldGroup;
     let url = `${URL.GROUPS}/${groupId}`;
     let body = {};
-    return this.goFetch(url, "DELETE", body);
+    return DataService.goFetch(url, "DELETE", body);
   }
 
-  updateMembership(oldMembership, newMembership) {
+  static updateMembership(oldMembership, groupId) {
     let membershipId = oldMembership.id || oldMembership;
-    let categoryName = newGroup.name || newGroup;
-    let url = `${URL.GROUPS}/${groupId}`;
+    let url = `${URL.MEMBERSHIPS}/${membershipId}`;
     let body = {};
-    body[ENTITIES.GROUP] = {
-      name: newName
+    body[ENTITIES.MEMBERSHIP] = {
+      category_group_id: groupId
     }
-    return this.goFetch(url, "PATCH", body);
+    return DataService.goFetch(url, "PATCH", body);
   }
 
-  createMembership(membership) {
-
-  }
-
-  deleteMembership(membership) {
+  static createMembership(membership) {
 
   }
 
-  getmemberships() {
+  static deleteMembership(membership) {
 
   }
 
-  goFetch(url, method, body) {
+  static getmemberships() {
+
+  }
+
+  static updateTransaction = (transaction, newValues) => {
+      let url = `${URL.TRANSACTIONS}/${transaction.id}`;
+      let body = {};
+      body[ENTITIES.TRANSACTION] = newValues;
+      return DataService.goFetch(url, "PATCH", body);
+  }
+
+  static goFetch = (url, method, body) => {
     return fetch(url, {
       method: method,
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json'
       }
-    })
+    });
   }
 
 }
+
+export default DataService;
