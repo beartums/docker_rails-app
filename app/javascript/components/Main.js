@@ -25,6 +25,7 @@ class Main extends React.Component {
       isLoading: true,
     };
     this.handleUploadButtonClick = this.handleUploadButtonClick.bind(this);
+    this.SETTINGS = SETTINGS;
 
   }
 
@@ -49,12 +50,14 @@ class Main extends React.Component {
   fetchTransactions() {
     return fetch('/api/v1/transactions.json')
       .then((response) => {return response.json()})
-      .then((data) => {
-        let minDate, maxDate, categories = {}
-        data.forEach( transaction => {
+      .then((transactions) => {
+        let minDate, maxDate, categories = {}, filteredTransactions = [];
+        transactions.forEach( transaction => {
+          if (transaction.date < this.SETTINGS.IGNORE_BEFORE) return;
           if (!minDate || transaction.date<minDate) minDate = transaction.date;
           if (!maxDate || transaction.date>maxDate) maxDate = transaction.date;
           categories[transaction.category] = !categories[transaction.category] ? 1 : categories[transaction.category]+1;
+          filteredTransactions.push(transaction);
         })
         minDate = minDate.split('-');
         minDate = new Date(minDate[0], minDate[1] - 1, minDate[2]);
@@ -62,13 +65,14 @@ class Main extends React.Component {
         maxDate = new Date(maxDate[0], maxDate[1] - 1, maxDate[2]);
 
         this.setState({ 
-          transactions: data,
+          transactions: transactions,
+          filteredTransactions: filteredTransactions,
           minDate: minDate,
           maxDate: maxDate,
           categories: Object.keys(categories).sort()
          }) ;
          console.log("setup finished");
-         return data;
+         return transactions;
       });
   }
 
@@ -83,13 +87,15 @@ class Main extends React.Component {
     } else if (this.state.tab == TABS.ALL) {
       div = <div>
         <h1>All Transactions ({this.state.transactions.length})</h1>
-        <ImportTransactionsForm handleClick={this.handleUploadButtonClick} />
-        <AllTransactions transactions={this.state.transactions} categories={this.state.categories} />
+        <AllTransactions 
+          transactions={this.state.transactions} 
+          categories={this.state.categories}
+          uploadTransactions={this.handleUploadButtonClick} />
       </div>
     } else if (this.state.tab==TABS.GROUPS) {
       div = <div>
         <h1>Category Group Management</h1>
-        <CategoryGroups transactions={this.state.transactions} minDate={this.state.minDate} maxDate={this.state.maxDate} />
+        <CategoryGroups transactions={this.state.filteredTransactions} minDate={this.state.minDate} maxDate={this.state.maxDate} />
       </div>
     } else if (this.state.tab==TABS.TRANSACTIONS) {
       div = <div>

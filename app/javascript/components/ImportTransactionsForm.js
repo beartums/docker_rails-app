@@ -10,7 +10,7 @@ class ImportTransactionsForm extends React.Component {
 
   render() {
     return (
-      <div className="file-field">
+      <button className="btn file-field">
 
         <label className="btn btn-default btn-file">
             Import Transactions CSV 
@@ -20,7 +20,7 @@ class ImportTransactionsForm extends React.Component {
         </label>
   
 
-      </div>
+      </button>
     )
   }
 }

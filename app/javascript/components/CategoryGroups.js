@@ -5,6 +5,7 @@ import TransactionSummaryTable from './TransactionSummaryTable';
 import { getCategories } from '../services/transactionService'
 import $ from 'jquery';
 import PropTypes from 'prop-types';
+import Transaction from './Transaction';
 
 var GROUP_NAME_DIALOG = {
   METHODS: {
@@ -32,7 +33,8 @@ class CategoryGroups extends React.Component {
       memberships: {},
       categoryIndex: {},
       categories: {},
-      groupNamePayload: null
+      groupNamePayload: null,
+      summaryTransactions: null
     }
     this.changeGroup = this.changeGroup.bind(this);
     Promise.all([this.fetchGroups(),this.fetchMemberships()]).then(results => {
@@ -295,39 +297,57 @@ class CategoryGroups extends React.Component {
       '-1': {id: '-1', name: '_Assigned; Bad Reference', categories: []}
     });
   }
-
+  showTransactions = (transactions) => {
+    this.setState({summaryTransactions:transactions})
+  }
+  getGroupListDiv = (groups) => {
+    return (
+      groups.map( group => <Group key={group.name} 
+                                        createNewGroup={this.showCreateNewGroupModal}
+                                        changeGroup={this.changeGroup}
+                                        deleteGroup={this.deleteGroup}
+                                        renameGroup={this.showRenameGroupModal}
+                                        group={group} 
+                                        groups={Object.values(this.state.groups)} />) 
+    )
+  }
+  getTransactionDetailDiv = () => {
+    return (
+      <table width="100%" className="table table-condensed table-xs">
+        <tbody>
+          { this.state.summaryTransactions.map( t =>  <Transaction key={t.id} transaction={t} /> ) }
+        </tbody>
+      </table>
+    )
+  }
   render = () => {
     let groups = Object.values(this.state.categoryIndex)
         .sort((a,b) => a.name<b.name ? -1 : 1)
         .filter(group => group.categories.length > 0);
 
     return (
-      <div className="col-12">
-        <div className="row">
-          <div className="col-6">
-            <Modal id={GROUP_NAME_DIALOG.MODAL_ID} 
-                          onSaveButton={this.onSaveGroupNameDialogAction} 
-                          onCancelButton={this.onCancelGroupNameDialog} 
-                          title="New Group Name">
-              <input id={GROUP_NAME_DIALOG.INPUT_ID} className="form-control" type="text" />
-            </Modal>
-
-            { groups.map( group => <Group key={group.name} 
-                                            createNewGroup={this.showCreateNewGroupModal}
-                                            changeGroup={this.changeGroup}
-                                            deleteGroup={this.deleteGroup}
-                                            renameGroup={this.showRenameGroupModal}
-                                            group={group} 
-                                            groups={Object.values(this.state.groups)} />) }
-          </div>
-          <div className="col-6">
-              <TransactionSummaryTable groups={groups} 
-                              transactions={this.props.transactions}
-                              minDate={this.state.minTransactionDate}
-                              maxDate={this.state.maxTransactionDate} />
+      <span>
+        <Modal id={GROUP_NAME_DIALOG.MODAL_ID} 
+            onSaveButton={this.onSaveGroupNameDialogAction} 
+            onCancelButton={this.onCancelGroupNameDialog} 
+            title="New Group Name">
+          <input id={GROUP_NAME_DIALOG.INPUT_ID} className="form-control" type="text" />
+        </Modal>
+        <div className="col-12">
+          <div className="row">
+            <div className="col-6">
+                <TransactionSummaryTable groups={groups} 
+                                transactions={this.props.transactions}
+                                minDate={this.state.minTransactionDate}
+                                maxDate={this.state.maxTransactionDate}
+                                showTransactions={this.showTransactions} />
+            </div>
+            <div className="col-6">
+            { this.state.summaryTransactions ? this.getTransactionDetailDiv() : this.getGroupListDiv(groups)}
+            </div>
           </div>
         </div>
-      </div>
+      </span>
     )
   }
 }

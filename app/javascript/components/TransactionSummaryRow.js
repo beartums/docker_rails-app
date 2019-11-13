@@ -58,9 +58,24 @@ class TransactionSummaryRow extends React.Component {
   }
 
   toggleSummarized = () => {
-    let isSumarized = this.state.isSumarized;
-    //this.setState({ isSummarized: !isSummarized });
-    this.props.toggleSummarized(this.props.group.name);
+    let isSummarized = !this.state.isSummarized;
+    let group = this.props.group;
+    let totals = this.props.periods.map( period => {
+      if (!isSummarized) return 0
+      else return period.getCategorySums(this.props.group.categories);
+    });
+    this.setState({isSummarized: isSummarized})
+    this.props.toggleSummarized(group, totals);
+    
+  }
+
+  showTransactions = (period, categories) => {
+    let trans = categories.reduce( (aggregatedTransactions, category) => {
+      let newTrans = period.transactionsByCategory[category.name] || [];
+      return aggregatedTransactions.concat(newTrans);
+      
+    }, [])
+    this.props.showTransactions(trans.sort((a,b)=>a.date<b.date?-1:1));
   }
 
   render() {
@@ -72,7 +87,8 @@ class TransactionSummaryRow extends React.Component {
         <td>{this.props.group.name}</td>
         { this.props.periods.map( (period,idx) => {
             return (
-              <td key={idx} className="text-right">
+              <td key={idx} className="text-right" 
+                onClick={() => this.showTransactions(period, this.props.group.categories)}>
                 {numeral(period.getCategorySums(this.props.group.categories)).format('$0.00')}
               </td>
             )

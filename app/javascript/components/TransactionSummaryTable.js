@@ -3,6 +3,7 @@ import TransactionSummaryRow from './TransactionSummaryRow';
 import TransactionSummaryHeader from './TransactionSummaryHeader';
 import { FaChevronLeft, FaChevronRight, FaBackward, FaForward, FaStepBackward, FaStepForward } from 'react-icons/fa'
 import moment from 'moment';
+import * as numeral from 'numeraljs';
 import { Period } from './classes';
 
 
@@ -16,11 +17,11 @@ var GLOBAL_SETTINGS = {
 class TransactionSummaryTable extends React.Component {
   constructor(props) {
     super(props);
-    let currentPeriod = this.createPeriod(GLOBAL_SETTINGS.START_DATE);
+    let currentPeriod = new Period(GLOBAL_SETTINGS.START_DATE);
     let firstPeriod = this.getExtremePeriod('min', currentPeriod);
     let lastPeriod = this.getExtremePeriod('max', currentPeriod);
 
-    let lastPeriodShown = this.createPeriod(currentPeriod.startDate,
+    let lastPeriodShown = new Period(currentPeriod.startDate,
       GLOBAL_SETTINGS.PERIOD_COUNT-1,
       currentPeriod.rangeType,
       currentPeriod.rangeCount);
@@ -31,14 +32,11 @@ class TransactionSummaryTable extends React.Component {
       periodsAfterLast: Period.getPeriodDiff(lastPeriodShown, lastPeriod),
       firstPeriod: firstPeriod,
       lastPeriod: lastPeriod,
-      currentPeriod: currentPeriod
+      currentPeriod: currentPeriod,
+      groupSummaries: {},
+      periods: Period.organizeTransactionsIntoPeriods(null,this.props.transactions,firstPeriod)
     }
 
-  }
-
-  createPeriod = (startDate, offset, rangeType, rangeCount) => {
-    let period = new Period(startDate, offset, rangeType, rangeCount);
-    return period;
   }
 
   setPeriodRelativeCounts = (period) => {
@@ -88,35 +86,40 @@ class TransactionSummaryTable extends React.Component {
     return this.state.periodsBeforeFirst;
   }
 
-  toggleSummarized = (groupName, totals) => {
-    let toggles = this.state.summarizedGroupToggles;
-    toggles[groupName] = !toggles[groupName]
+  toggleSummarized = (group, totals) => {
+    let summaries = this.state.groupSummaries;
+    summaries[group.name] = totals
     this.setState({
-      summarizeGroupToggles: toggles
+     groupSummaries: summaries
     });
   }
 
-  summarizeTotals = (groups, summarizeGroupToggles) => {
-    let totals = groups.forEach( group => {
-      if (summarizedGroupToggles[group.name]) {
-        group.totals.forEach( (total, idx) => {
-          totals[idx] += total;
-        })
+  summarizeTotals = (summaries) => {
+    summaries = summaries || this.state.groupSummaries;
+    if (!summaries) return [];
+    let totals = Object.values(summaries).reduce( (total, summary) => {
+      for (let i = 0; i < summary.length; i++) {
+        total[i] = total[i] ? total[i] + summary[i] : summary[i];
       }
-    });
+      return total
+    }, []);
     return totals;
   }
 
-  render() {
-    let numPeriodsToShow = this.state.SETTINGS.PERIOD_COUNT
-    let periods = [];
-    let totals = [];
-    let startPeriod = this.state.currentPeriod;
-    for (let i = 0; i < numPeriodsToShow; i++) {
-      let period = new Period(startPeriod.startDate, i, startPeriod.rangeType, startPeriod.rangeCount);
-      period.setPeriodTransactions(this.props.transactions);
-      periods.push(period);
+  getPeriodsToShow = () => {
+    let periods = this.state.periods;
+    let keys = Object.keys(periods).sort();
+    let idx = keys.indexOf(this.state.currentPeriod.startDate.toISOString())
+    let periodsToShow = [];
+    for (let i = idx; i < idx + GLOBAL_SETTINGS.PERIOD_COUNT; i++) {
+      periodsToShow.push(periods[keys[i]]);
     }
+    return periodsToShow;
+  }
+
+  render() {
+    let periods = this.getPeriodsToShow();
+    let numPeriodsToShow = GLOBAL_SETTINGS.PERIOD_COUNT;
 
     return(
       <div class-name="row">
@@ -169,8 +172,16 @@ class TransactionSummaryTable extends React.Component {
                 <TransactionSummaryHeader periods={periods} />
                 <tbody>
                   { this.props.groups.map(group => {
-                    return <TransactionSummaryRow key={group.id} group={group} periods={periods} toggleSummarized={this.toggleSummarized} />
+                    return <TransactionSummaryRow key={group.id} 
+                    group={group} 
+                    periods={periods}
+                    showTransactions={this.props.showTransactions} 
+                    toggleSummarized={this.toggleSummarized} />
                   })}
+                  <tr>
+                    <td colSpan="2"></td>
+                    { this.summarizeTotals().map( total => <td>{numeral(total).format('$0.00')}</td>)}
+                  </tr>
                 </tbody>
               </table>
             </div>

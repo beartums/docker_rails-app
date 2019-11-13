@@ -2,7 +2,7 @@
   "name": "project",
   "private": true,
   "dependencies": {
-    "@babel/preset-react": "^7.6.3",
+    "@babel/preset-react": "^7.7.0",
     "@rails/webpacker": "^4.0.7",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "bootstrap": "^4.3.1",
@@ -19,7 +19,16 @@
     "react_ujs": "^2.6.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.7.1",
     "@fortawesome/fontawesome-free": "^5.11.2",
+    "babel-jest": "^24.9.0",
+    "jasmine": "^3.5.0",
+    "jest": "^24.9.0",
+    "karma": "^4.4.1",
+    "react-test-renderer": "^16.11.0",
     "webpack-dev-server": "^3.8.2"
+  },
+  "scripts": {
+    "test": "jest"
   }
 }

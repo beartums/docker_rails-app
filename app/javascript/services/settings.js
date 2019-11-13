@@ -1,5 +1,5 @@
 const SETTINGS = {
-  ignoreTransactionsBefore: new Date(2019,7,6),
+  IGNORE_BEFORE: '2019-08-06T00:00:00',
   periodRangeType: 'M',
   periodRangeLength: 1 ,
   periodsToShow: 3,
