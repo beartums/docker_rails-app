@@ -59,9 +59,9 @@ class Main extends React.Component {
           categories[transaction.category] = !categories[transaction.category] ? 1 : categories[transaction.category]+1;
           filteredTransactions.push(transaction);
         })
-        minDate = minDate.split('-');
+        minDate = minDate ? minDate.split('-') : '2000-01-01';
         minDate = new Date(minDate[0], minDate[1] - 1, minDate[2]);
-        maxDate = maxDate.split('-');
+        maxDate = maxDate ? maxDate.split('-') : '2019-12-31';
         maxDate = new Date(maxDate[0], maxDate[1] - 1, maxDate[2]);
 
         this.setState({ 
@@ -72,7 +72,7 @@ class Main extends React.Component {
           categories: Object.keys(categories).sort()
          }) ;
          console.log("setup finished");
-         return transactions;
+         return transactions || [];
       });
   }
 

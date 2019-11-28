@@ -16,6 +16,10 @@ var GROUP_NAME_DIALOG = {
   INPUT_ID: 'groupNameInputId'
 }
 
+var GROUP_DELETE_DIALOG = {
+  MODAL_ID: 'groupDeleteModalId'
+}
+
 var LOCAL_SETTINGS = {
   MIN_DATE: new Date('8/6/2019'),
   IGNORE_BEFORE_MIN_DATE: false,
@@ -147,6 +151,11 @@ class CategoryGroups extends React.Component {
     $(`#${GROUP_NAME_DIALOG.INPUT_ID}`).val(group.name);
     $(`#${GROUP_NAME_DIALOG.MODAL_ID}`).modal('show');
   }
+  
+  showDeleteGroupModal = group => {
+    this.setState({groupToDelete: group})
+    $(`#${GROUP_DELETE_DIALOG.MODAL_ID}`).modal('show');
+  }
 
   closeGroupNameDialog = () => {
     $(`#${GROUP_NAME_DIALOG.MODAL_ID}`).modal('hide');
@@ -236,6 +245,7 @@ class CategoryGroups extends React.Component {
   }
 
   deleteGroup = group => {
+    group = group || this.state.groupToDelete;
     fetch(`/api/v1/category_groups/${group.id}`, {
       method: 'DELETE'
     }).then(result => {
@@ -297,20 +307,27 @@ class CategoryGroups extends React.Component {
       '-1': {id: '-1', name: '_Assigned; Bad Reference', categories: []}
     });
   }
+
   showTransactions = (transactions) => {
     this.setState({summaryTransactions:transactions})
   }
+
+  hideTransactions = (group) => {
+    this.setState({summaryTransactions: false})
+  }
+
   getGroupListDiv = (groups) => {
     return (
       groups.map( group => <Group key={group.name} 
                                         createNewGroup={this.showCreateNewGroupModal}
                                         changeGroup={this.changeGroup}
-                                        deleteGroup={this.deleteGroup}
+                                        deleteGroup={this.showDeleteGroupModal}
                                         renameGroup={this.showRenameGroupModal}
                                         group={group} 
                                         groups={Object.values(this.state.groups)} />) 
     )
   }
+
   getTransactionDetailDiv = () => {
     return (
       <table width="100%" className="table table-condensed table-xs">
@@ -320,6 +337,7 @@ class CategoryGroups extends React.Component {
       </table>
     )
   }
+
   render = () => {
     let groups = Object.values(this.state.categoryIndex)
         .sort((a,b) => a.name<b.name ? -1 : 1)
@@ -333,6 +351,13 @@ class CategoryGroups extends React.Component {
             title="New Group Name">
           <input id={GROUP_NAME_DIALOG.INPUT_ID} className="form-control" type="text" />
         </Modal>
+        <Modal id={GROUP_DELETE_DIALOG.MODAL_ID} 
+            onSaveButton={this.deleteGroup} 
+            onCancelButton={this.onCancelDeleteDialog} 
+            title="Delete Group">
+            If you click 'Save', the group will be deleted for good.
+            this action is NOT reversible.  All of the assigned categories will be moved to the Unassigned group.
+        </Modal>
         <div className="col-12">
           <div className="row">
             <div className="col-6">
@@ -340,7 +365,8 @@ class CategoryGroups extends React.Component {
                                 transactions={this.props.transactions}
                                 minDate={this.state.minTransactionDate}
                                 maxDate={this.state.maxTransactionDate}
-                                showTransactions={this.showTransactions} />
+                                showTransactions={this.showTransactions}
+                                hideTransactions={this.hideTransactions} />
             </div>
             <div className="col-6">
             { this.state.summaryTransactions ? this.getTransactionDetailDiv() : this.getGroupListDiv(groups)}

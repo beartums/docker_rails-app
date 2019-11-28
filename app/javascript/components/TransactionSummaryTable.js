@@ -1,10 +1,10 @@
 import React from 'react';
 import TransactionSummaryRow from './TransactionSummaryRow';
 import TransactionSummaryHeader from './TransactionSummaryHeader';
-import { FaChevronLeft, FaChevronRight, FaBackward, FaForward, FaStepBackward, FaStepForward } from 'react-icons/fa'
-import moment from 'moment';
+import { FaChevronLeft, FaChevronRight, FaBackward, FaForward, FaStepBackward, FaStepForward } from 'react-icons/fa';
 import * as numeral from 'numeraljs';
 import { Period } from './classes';
+import * as LSS from '../services/localSettingsService';
 
 
 var GLOBAL_SETTINGS = {
@@ -33,7 +33,7 @@ class TransactionSummaryTable extends React.Component {
       firstPeriod: firstPeriod,
       lastPeriod: lastPeriod,
       currentPeriod: currentPeriod,
-      groupSummaries: {},
+      groupSummaries: LSS.getSetting('groupSummaries',{}),
       periods: Period.organizeTransactionsIntoPeriods(null,this.props.transactions,firstPeriod)
     }
 
@@ -86,24 +86,21 @@ class TransactionSummaryTable extends React.Component {
     return this.state.periodsBeforeFirst;
   }
 
-  toggleSummarized = (group, totals) => {
+  toggleSummarized = (group) => {
     let summaries = this.state.groupSummaries;
-    summaries[group.name] = totals
+    summaries[group.name] = !summaries[group.name]
     this.setState({
      groupSummaries: summaries
     });
+    LSS.setSetting("groupSummaries",summaries);
   }
 
-  summarizeTotals = (summaries) => {
-    summaries = summaries || this.state.groupSummaries;
-    if (!summaries) return [];
-    let totals = Object.values(summaries).reduce( (total, summary) => {
-      for (let i = 0; i < summary.length; i++) {
-        total[i] = total[i] ? total[i] + summary[i] : summary[i];
-      }
-      return total
-    }, []);
-    return totals;
+  getCategoriesToSum = () => {
+    let groupNames = Object.keys(this.state.groupSummaries).filter(name=>this.state.groupSummaries[name]);
+    let groups = this.props.groups.filter(group => groupNames.indexOf(group.name) > -1);
+    let categories = groups.reduce( (cats,group) => cats.concat(group.categories), []);
+    //let categories = []
+    return categories;
   }
 
   getPeriodsToShow = () => {
@@ -120,6 +117,7 @@ class TransactionSummaryTable extends React.Component {
   render() {
     let periods = this.getPeriodsToShow();
     let numPeriodsToShow = GLOBAL_SETTINGS.PERIOD_COUNT;
+    let catsToSummarize = this.getCategoriesToSum();
 
     return(
       <div class-name="row">
@@ -175,12 +173,14 @@ class TransactionSummaryTable extends React.Component {
                     return <TransactionSummaryRow key={group.id} 
                     group={group} 
                     periods={periods}
+                    isSummarized={this.state.groupSummaries[group.name]}
                     showTransactions={this.props.showTransactions} 
+                    hideTransactions={this.props.hideTransactions}
                     toggleSummarized={this.toggleSummarized} />
                   })}
                   <tr>
                     <td colSpan="2"></td>
-                    { this.summarizeTotals().map( total => <td>{numeral(total).format('$0.00')}</td>)}
+                    { periods.map( period => <td>{numeral(period.getCategorySums(catsToSummarize)).format('$0.00')}</td>)}
                   </tr>
                 </tbody>
               </table>

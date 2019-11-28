@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@babel/preset-react": "^7.7.0",
-    "@rails/webpacker": "^4.0.7",
+    "@rails/webpacker": "^4.2.0",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "bootstrap": "^4.3.1",
     "jquery": "^3.4.1",
@@ -26,9 +26,15 @@
     "jest": "^24.9.0",
     "karma": "^4.4.1",
     "react-test-renderer": "^16.11.0",
-    "webpack-dev-server": "^3.8.2"
+    "webpack-dev-server": "^3.9.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-watch": "jest --watch"
+  },
+  "jest": {
+    "roots": [
+      "test/javascript"
+    ]
   }
 }

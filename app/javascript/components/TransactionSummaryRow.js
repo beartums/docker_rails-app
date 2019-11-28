@@ -58,15 +58,9 @@ class TransactionSummaryRow extends React.Component {
   }
 
   toggleSummarized = () => {
-    let isSummarized = !this.state.isSummarized;
-    let group = this.props.group;
-    let totals = this.props.periods.map( period => {
-      if (!isSummarized) return 0
-      else return period.getCategorySums(this.props.group.categories);
-    });
-    this.setState({isSummarized: isSummarized})
-    this.props.toggleSummarized(group, totals);
-    
+    this.setState({isSummarized: !this.state.isSummarized})
+    this.props.toggleSummarized(this.props.group);
+    return;
   }
 
   showTransactions = (period, categories) => {
@@ -78,13 +72,16 @@ class TransactionSummaryRow extends React.Component {
     this.props.showTransactions(trans.sort((a,b)=>a.date<b.date?-1:1));
   }
 
+  hideTransactions = () => {
+    this.props.hideTransactions(this.props.group);
+  }
   render() {
     //let periodTotals = 
     // this.getPeriodTotals(this.props.group.categories, this.props.periods);
     return (
       <tr>
-        <td><input type="checkbox" checked={this.state.isSummarized} onClick={this.toggleSummarized} /></td>
-        <td>{this.props.group.name}</td>
+        <td><input type="checkbox" defaultChecked={this.state.isSummarized} onClick={this.toggleSummarized} /></td>
+        <td onClick={this.hideTransactions}>{this.props.group.name}</td>
         { this.props.periods.map( (period,idx) => {
             return (
               <td key={idx} className="text-right" 
